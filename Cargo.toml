@@ -31,7 +31,9 @@ arrayvec = { version="0.5.1", features = ["serde"] }
 
 
 [features]
-# default = ["type-guards"]
+default = ["type-script-ify", "type-hash"]
+type-script-ify = ["typescript-definitions-derive/type-script-ify"]
+type-hash = ["typescript-definitions-derive/type-hash"]
 export-typescript = ["typescript-definitions-derive/export-typescript"]
 test = ["typescript-definitions-derive/test"]
 type-guards = ["typescript-definitions-derive/type-guards"]

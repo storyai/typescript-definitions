@@ -124,6 +124,7 @@ cfg_if! {
 }
 
 #[allow(unused)]
+/// Adds the typescript definitions via wasm-bindgen as typescript_custom_section
 fn do_derive_typescript_definition(input: QuoteT) -> QuoteT {
     let verify = cfg!(feature = "type-guards");
     let tsy = Typescriptify::new(input);
@@ -166,6 +167,7 @@ fn do_derive_typescript_definition(input: QuoteT) -> QuoteT {
 }
 
 #[allow(unused)]
+/// Adds functions for gettign strings of typescript directly off of the struct/enum
 fn do_derive_type_script_ify(input: QuoteT) -> QuoteT {
     // panic!("after here");
     let verify = cfg!(feature = "type-guards");
@@ -186,6 +188,27 @@ fn do_derive_type_script_ify(input: QuoteT) -> QuoteT {
                     #verifier
             }
         )
+    } else {
+        quote!()
+    };
+
+    let type_script_ify = if cfg!(feature = "type-script-ify") {
+        quote!(fn type_script_ify() ->  ::std::borrow::Cow<'static,str> {
+            ::std::borrow::Cow::Borrowed(#export_string)
+        })
+    } else {
+        quote!()
+    };
+
+    let type_hash = if cfg!(feature = "type-hash") {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut state = DefaultHasher::new();
+        export_string.hash(&mut state);
+        let result = state.finish();
+        quote!(fn type_hash() ->u64 {
+            #result
+        })
     } else {
         quote!()
     };
@@ -218,11 +241,9 @@ fn do_derive_type_script_ify(input: QuoteT) -> QuoteT {
         quote!()
     };
     let ret = quote! {
-
         impl #impl_generics ::typescript_definitions::TypeScriptifyTrait for #ident #ty_generics #where_clause {
-            fn type_script_ify() ->  ::std::borrow::Cow<'static,str> {
-                ::std::borrow::Cow::Borrowed(#export_string)
-            }
+            #type_script_ify
+            #type_hash
             #type_script_guard
             #type_script_enum_factory
             #type_script_enum_handlers

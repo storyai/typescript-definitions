@@ -18,6 +18,7 @@
 pub extern crate typescript_definitions_derive;
 
 #[macro_export]
+#[cfg(feature = "type-script-ify")]
 macro_rules! tsy_lines {
     ($($line:ty;)+) => {{
         use ::typescript_definitions::TypeScriptifyTrait;
@@ -27,6 +28,165 @@ macro_rules! tsy_lines {
             writeln!(&mut tsy_lines, "{}", <$line>::type_script_ify()).unwrap();
         })+
         tsy_lines
+    }};
+}
+
+pub struct TypeScriptSource {
+    pub source: Option<String>,
+    pub hash: u64,
+}
+
+impl TypeScriptSource {
+    /// merge two hash lines returning a combined version
+    pub fn with(&self, other: &Self, title_opt: Option<&str>) -> Self {
+        TypeScriptSource {
+            #[cfg(not(feature = "type-script-ify"))]
+            source: None,
+            #[cfg(feature = "type-script-ify")]
+            source: self.source.as_ref().and_then(|source| {
+                other.source.as_ref().map(|o_source| {
+                    if let Some(title) = title_opt {
+                        format!("{}\n\n// {}\n\n{}", source, title, o_source)
+                    } else {
+                        format!("{}\n\n{}", source, o_source)
+                    }
+                })
+            }),
+            #[cfg(not(feature = "type-hash"))]
+            hash: 0,
+            #[cfg(feature = "type-hash")]
+            hash: {
+                if other.hash != 0 {
+                    use ::std::collections::hash_map::DefaultHasher;
+                    use ::std::hash::{Hash, Hasher};
+                    let mut state = DefaultHasher::new();
+                    other.hash.hash(&mut state);
+                    self.hash.hash(&mut state);
+                    state.finish()
+                } else {
+                    self.hash
+                }
+            },
+        }
+    }
+
+    // comment should not be exported to ensure that we don't include comment lines in the hashing
+    fn comment<S: Into<String>>(s: S) -> Self {
+        TypeScriptSource {
+            #[cfg(not(feature = "type-script-ify"))]
+            source: None,
+            #[cfg(feature = "type-script-ify")]
+            source: Some(
+                s.into()
+                    .split('\n')
+                    .map(|line| {
+                        if line.starts_with("//") {
+                            format!("{}\n", line)
+                        } else {
+                            format!("// {}\n", line)
+                        }
+                    })
+                    .collect::<String>(),
+            ),
+            hash: 0,
+        }
+    }
+
+    pub fn source<S: Into<String>>(s: S) -> Self {
+        let s_string = s.into();
+        TypeScriptSource {
+            #[cfg(not(feature = "type-hash"))]
+            hash: 0,
+            #[cfg(feature = "type-hash")]
+            hash: hash_string(&s_string),
+            #[cfg(not(feature = "type-script-ify"))]
+            source: None,
+            #[cfg(feature = "type-script-ify")]
+            source: Some(s_string),
+        }
+    }
+
+    pub fn empty() -> Self {
+        TypeScriptSource {
+            #[cfg(not(feature = "type-script-ify"))]
+            source: None,
+            #[cfg(feature = "type-script-ify")]
+            source: Some(String::from("")),
+            hash: 0,
+        }
+    }
+}
+
+fn hash_string(s: &str) -> u64 {
+    use ::std::collections::hash_map::DefaultHasher;
+    use ::std::hash::{Hash, Hasher};
+    let mut state = DefaultHasher::new();
+    s.hash(&mut state);
+    state.finish()
+}
+
+/// From String always produces comment output and will not contribute to the hash
+impl<S: Into<String>> From<S> for TypeScriptSource {
+    fn from(s: S) -> Self {
+        TypeScriptSource::comment(s)
+    }
+}
+
+#[macro_export]
+macro_rules! tsy_hash_line {
+    (source $e:literal) => {{
+        TsyHashLines::source($e)
+    }};
+    (source $e:expr) => {{
+        TsyHashLines::source($e)
+    }};
+    ($e:literal) => {{
+        #[cfg(not(feature = "type-script-ify"))]
+        TsyHashLines::empty()
+        #[cfg(feature = "type-script-ify")]
+        TsyHashLines::comment($e)
+    }};
+    ($e:expr) => {{
+        let mut tsy_lines = TsyHashLines::empty();
+        $({
+            tsy_lines = tsy_lines.with(TsyHashLines::from($e));
+        })+
+    }};
+    // Must be typescriptify structs
+    ($e:ty) => {{
+        let mut tsy_lines = TsyHashLines::empty();
+        $({
+            tsy_lines = tsy_lines.with(TsyHashLines::from($e));
+        })+
+    }};
+}
+
+#[macro_export]
+macro_rules! tsy_hash_lines {
+    ($($line:stmt);+) => {{
+        // 0
+        #[macro_use]
+        use ::typescript_definitions::tsy_hash_line;
+        let mut tsy_lines = TsyHashLines::empty();
+        $({
+            tsy_lines = tsy_lines.with(tsy_hash_line!($line));
+        })+
+        tsy_lines
+    }};
+}
+
+#[macro_export]
+#[cfg(feature = "type-hash")]
+macro_rules! tsy_hash {
+    ($($line:ty;)+) => {{
+        use ::typescript_definitions::TypeScriptifyTrait;
+        use ::std::hash::{Hash, Hasher};
+        use ::std::collections::hash_map::DefaultHasher;
+        let mut state = DefaultHasher::new();
+        $({
+            <$line>::type_hash().hash(&mut state);
+        })+
+        state.finish()
     }};
 }
 
@@ -42,7 +202,15 @@ pub use typescript_definitions_derive::*;
 ///
 ///
 pub trait TypeScriptifyTrait {
+    #[cfg(feature = "type-script-ify")]
     fn type_script_ify() -> Cow<'static, str>;
+
+    #[cfg(feature = "type-hash")]
+    /// Available with `--features="type-hash"`
+    /// Enables you to get a consistent hash of the current types.
+    /// This can be used to validate whether the types that are generated match those during runtime
+    /// with minimal overhead.
+    fn type_hash() -> u64;
 
     #[cfg(feature = "type-guards")]
     /// Available with `--features="type-guards"`
@@ -96,6 +264,7 @@ pub trait TypeScriptifyTrait {
     /// ```
     fn type_script_enum_handlers() -> Result<Cow<'static, str>, &'static str>;
 }
+
 /// # String serializer for `u8` byte buffers.
 ///
 /// Use `#[serde(serialize_with="typescript_definitions::as_byte_string")]`
