@@ -515,9 +515,10 @@ impl TSOutput {
                     patch(&self.q_maker.source.to_string()),
                 ),
                 values: format!(
-                    "{}export const {} = (check: {}) => check\n",
+                    "{}export function {}(check: {}): {} {{ return check; }}\n",
                     // check create function
                     self.pctxt.global_attrs.to_comment_str(),
+                    self.ident,
                     self.ident,
                     self.ident,
                 ),

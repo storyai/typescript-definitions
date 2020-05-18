@@ -158,6 +158,8 @@ impl<'a> ParseContext {
             None
         };
 
+        let type_ident_str = self.ident.to_string();
+
         let enum_factory = taginfo
             .tag
             .as_ref()
@@ -179,11 +181,11 @@ impl<'a> ParseContext {
                                 .content
                                 .map(|content_key| {
                                     let content_key_str = Literal::string(content_key);
-                                    quote!({ #tag_key_str: #tag_name_str, #content_key_str: content })
+                                    quote!({ __typename: #type_ident_str, #tag_key_str: #tag_name_str, #content_key_str: content })
                                 })
-                                .unwrap_or(quote!({ #tag_key: #tag_name_str, ...content }))
+                                .unwrap_or(quote!({ __typename: #type_ident_str, #tag_key: #tag_name_str, ...content }))
                         } else {
-                            quote!({ #tag_key_str: #tag_name_str })
+                            quote!({  __typename: #type_ident_str, #tag_key_str: #tag_name_str })
                         }
                     },
                 );
@@ -219,14 +221,20 @@ impl<'a> ParseContext {
                 let tag_name_copy2 = tag_name.clone();
                 let newls_copy = newls.clone();
                 let newls_copy2 = newls.clone();
+                let tsignore_iter = std::iter::repeat(tsignore.clone());
+                let tsignore_iter_2 = std::iter::repeat(tsignore.clone());
                 Ok(
                     quote!(export const #type_ident_1 = Object.freeze({
+                        name: #type_ident_str,
+                        check: (val: #type_ident_1) => val,
                         #( #newls_copy2  #tag_name_copy2(#args_copy2): #type_ident {
+                            #tsignore_iter
                             return #ret_constructs_copy
                         },)*#newl
                     });#newl
                     export const #export_factory_ident_1 = <R> (fn: (message: #type_ident_1) => R): #export_factory_type_ident_1<R> => Object.freeze({
                             #( #newls  #tag_name(#args): R {
+                                #tsignore_iter_2
                                 return fn(#ret_constructs)
                             },)*#newl
                         });#newl
