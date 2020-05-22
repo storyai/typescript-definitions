@@ -181,11 +181,25 @@ impl<'a> ParseContext {
                                 .content
                                 .map(|content_key| {
                                     let content_key_str = Literal::string(content_key);
-                                    quote!({ __typename: #type_ident_str, #tag_key_str: #tag_name_str, #content_key_str: content })
+                                    quote!({
+                                        #tsignore
+                                        __typename: #type_ident_str,
+                                        #tag_key_str: #tag_name_str,
+                                        #content_key_str: content
+                                    })
                                 })
-                                .unwrap_or(quote!({ __typename: #type_ident_str, #tag_key: #tag_name_str, ...content }))
+                                .unwrap_or(quote!({
+                                    #tsignore
+                                    __typename: #type_ident_str,
+                                    #tag_key: #tag_name_str,
+                                    ...content
+                                }))
                         } else {
-                            quote!({  __typename: #type_ident_str, #tag_key_str: #tag_name_str })
+                            quote!({
+                                #tsignore
+                                __typename: #type_ident_str,
+                                #tag_key_str: #tag_name_str
+                            })
                         }
                     },
                 );
