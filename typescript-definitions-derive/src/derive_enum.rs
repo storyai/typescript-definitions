@@ -58,7 +58,7 @@ struct VariantQuoteMaker {
     pub inner_type: Option<QuoteT>,
 }
 
-#[allow(clippy::or_fun_call)]
+#[allow(clippy::or_fun_call, clippy::bind_instead_of_map)]
 impl<'a> ParseContext {
     pub(crate) fn derive_enum(
         &self,
