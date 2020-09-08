@@ -91,7 +91,7 @@ fn do_derive_typescript_definition(input: QuoteT) -> QuoteT {
         "{}\ntype __StartValuesFor__{}__ = `\n{}\n`/*EndValuesFor__{}__*/",
         export_source.declarations,
         parsed.ident.as_str(),
-        export_source.values,
+        export_source.values.replace("`", "\\`"),
         parsed.ident.as_str()
     );
     let name = tsy.ident.to_string().to_uppercase();
