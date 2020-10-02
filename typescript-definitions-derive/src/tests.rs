@@ -7,6 +7,24 @@ mod macro_test {
     use super::Typescriptify;
     use insta::assert_snapshot_matches;
     use quote::quote;
+    
+    #[test]
+    fn doc_comments() {
+		let tokens = quote!(
+			/// This is some very well documented struct.
+			#[derive(Serialize)]
+			struct Documented {
+				/// one doc comment
+				x: String,
+			}
+		);
+		let output = Typescriptify::new(tokens).parse();
+		let source = output.export_type_definition_source().declarations;
+		assert_eq!("/**\n * This is some very well documented struct.\n */\n\
+		export type Documented = {\n    /**\n     * one doc comment\n     */\
+		\n    x: string\n}", source);
+	}
+    
     #[test]
     fn tag_clash_in_enum() {
         let tokens = quote!(
@@ -18,7 +36,7 @@ mod macro_test {
             }
         );
 
-        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse(true));
+        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse());
         match result {
             Ok(_x) => assert!(false, "expecting panic!"),
             Err(ref msg) => assert_snapshot_matches!( msg.downcast_ref::<String>().unwrap(),
@@ -39,7 +57,7 @@ mod macro_test {
                 c: DDD,
             }
         );
-        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse(true));
+        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse());
         match result {
             Ok(_x) => assert!(false, "expecting panic!"),
             Err(ref msg) => assert_snapshot_matches!( msg.downcast_ref::<String>().unwrap(),
@@ -58,7 +76,7 @@ mod macro_test {
                 b: f64,
             }
         );
-        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse_verify());
+        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse());
         match result {
             Ok(_x) => assert!(false, "expecting panic!"),
             Err(ref msg) => assert_snapshot_matches!( msg.downcast_ref::<String>().unwrap(),
@@ -97,7 +115,7 @@ mod macro_test {
                 b: Vec<T>,
             }
         );
-        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse(true));
+        let result = std::panic::catch_unwind(move || Typescriptify::new(tokens).parse());
         match result {
             Ok(_x) => assert!(false, "expecting panic!"),
             Err(ref msg) => assert_snapshot_matches!( msg.downcast_ref::<String>().unwrap(),

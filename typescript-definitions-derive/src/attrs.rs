@@ -256,6 +256,7 @@ impl Attrs {
             let id = ident_from_str("unnamed");
             res.push_field_attrs(&id, &field.original.attrs, ctxt);
         }
+        res.push_doc_comment(&field.original.attrs);
         res
     }
 }

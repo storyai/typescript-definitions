@@ -13,7 +13,8 @@
 extern crate proc_macro;
 use quote::quote;
 use serde_derive_internals::{ast, Ctxt, Derive};
-use syn::DeriveInput;
+use syn::{Attribute, DeriveInput, Ident,Token};
+use syn::parse::{Parse, ParseStream};
 
 mod attrs;
 mod derive_enum;
@@ -437,6 +438,15 @@ impl<'a> FieldContext<'a> {
     }
 }
 
+// This is a helper to allow us to parse attributes
+struct OuterAttrs(Vec<Attribute>);
+
+impl Parse for OuterAttrs {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+        Ok(OuterAttrs(input.call(Attribute::parse_outer)?))
+    }
+}
+
 pub(crate) struct ParseContext {
     ctxt: Option<Ctxt>,  // serde parse context for error reporting
     global_attrs: Attrs, // global #[ts(...)] attributes
@@ -468,6 +478,7 @@ impl<'a> ParseContext {
 
     /// returns { #ty } of
     fn field_to_ts(&self, field: &ast::Field<'a>) -> QuoteT {
+        //TODO: move this completely into derive_field and add it as an arg
         let attrs = Attrs::from_field(field, self.ctxt.as_ref());
         // if user has provided a type ... use that
         if attrs.ts_type.is_some() {
@@ -499,15 +510,24 @@ impl<'a> ParseContext {
 
     /// returns { #field_name: #ty }
     fn derive_field(&self, field: &ast::Field<'a>) -> QuoteT {
+        let attrs = Attrs::from_field(field, self.ctxt.as_ref());
         let field_name = field.attrs.name().serialize_name(); // use serde name instead of field.member
-        let field_name = ident_from_str(&field_name);
+        //let field_name = ident_from_str(&field_name);
 
         let ty = self.field_to_ts(&field);
-
-        quote! {
-            #field_name: #ty
-        }
+        //TODO: change this into our own attr type, see overflower
+        let comment_str = attrs.to_comment_str();
+		let comment = syn::parse_str::<OuterAttrs>(&comment_str).unwrap().0;
+        let field = syn::Field {
+			attrs: comment,
+			vis: syn::Visibility::Inherited,
+			ident: Some(syn::parse_str::<Ident>(&field_name).unwrap()),
+			colon_token: Some(Token![:](proc_macro2::Span::call_site())),
+			ty: syn::parse2(ty).unwrap(),
+		};
+		quote! { #field }
     }
+
     fn derive_fields(
         &'a self,
         fields: &'a [&'a ast::Field<'a>],
