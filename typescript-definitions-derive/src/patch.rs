@@ -37,7 +37,7 @@ const NL_PATCH: &str = "\"__nlnlnlnl__\"";
 const PURE_PATCH: &str = "\"__pure__\"";
 const TS_IGNORE_PATCH: &str = "\"__ts_ignore__\"";
 // type N = [(&'static str, &'static str); 10];
-const NAMES: [(&str, &str); 15] = [
+const NAMES: [(&str, &str); 16] = [
     ("brack", r"\s*\[\s+\]"),
     ("brace", r"\{\s+\}"),
     ("colon", r"\s+[:]\s"),
@@ -51,7 +51,8 @@ const NAMES: [(&str, &str); 15] = [
     ("dot", r"\s\.\s"),
     ("nlpatch", NL_PATCH),         // for adding newlines to output string
     ("tsignore", TS_IGNORE_PATCH), // for adding ts-ignore comments to output string
-    ("pure", PURE_PATCH),          // for adding ts-ignore comments to output string
+    ("pure", PURE_PATCH),          // for adding ts-ignore comments to output str"doc", ing
+    ("doc", r#"#\s*\[\s*doc\s*=\s*"(?P<comment>.*?)"\]"#), // for fixing mishandled ts doc comments
     ("nl", r"\n+"),                // last!
 ];
 lazy_static! {
@@ -122,10 +123,25 @@ pub fn patch(s: &str) -> Cow<'_, str> {
             "nlpatch" => "\n",
             "tsignore" => "//@ts-ignore\n",
             "pure" => "/*#__PURE__*/",
+            "doc" => return c.name("comment").map_or(Cow::Borrowed(""), |m| (String::from("/**") + &unescape(&m.as_str()) + "*/").into()),
             _ => return Cow::Owned(c.get(0).unwrap().as_str().to_owned()), // maybe should just panic?
         };
         Cow::Borrowed(m)
     })
+}
+
+lazy_static! {
+    static ref UNESCAPE: Regex = Regex::new(r"\\(.)").unwrap();
+}
+
+// when we get the string, e.g. newlines, backslashes and quotes are escaped
+fn unescape(input: &str) -> Cow<'_, str> {
+    UNESCAPE.replace_all(input, |c: &Captures| Cow::Borrowed(match c.get(1).map_or("", |m| dbg!(m.as_str())) {
+        "n" => "\n",
+        "\"" => "\"",
+        "\\" => "\\",
+        x => return Cow::Owned(x.into()),
+    }))
 }
 
 #[inline]

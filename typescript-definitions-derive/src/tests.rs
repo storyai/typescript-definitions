@@ -175,6 +175,19 @@ mod macro_test {
         )
     }
 
+    #[test]
+    fn doc_comments_in_fields() {
+        let tokens = quote!(
+            /// a well-documented struct
+            struct WellDocumented {
+                /// even the field is documented
+                well_documented: String,
+            }
+        );
+        assert_conversion!(tokens, "/**\n * a well-documented struct\n */\n\
+            export type WellDocumented = { /**\n * even the field is documented\n */ well_documented: string }");
+    }
+
     // Error tests
 
     #[test]
