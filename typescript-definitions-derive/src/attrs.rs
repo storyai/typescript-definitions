@@ -103,7 +103,10 @@ impl Attrs {
         if self.comments.is_empty() {
             String::default()
         } else {
-            format!("/**\n{}\n */\n", self.comments.join("\n *\n"))
+            format!(
+                "/**\n\n\n\n{}\n\n\n\n */\n\n\n\n",
+                self.comments.join("\n\n\n\n *\n\n\n\n")
+            )
         }
     }
 
