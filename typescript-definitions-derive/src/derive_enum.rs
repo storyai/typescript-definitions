@@ -22,6 +22,7 @@ struct TagInfo<'a> {
     /// flattened without tag `{ "key1": "", "key2": "" }`
     untagged: bool,
 }
+
 impl<'a> TagInfo<'a> {
     fn from_enum(e: &'a TagType) -> Self {
         match e {
@@ -79,6 +80,10 @@ impl<'a> ParseContext {
             && variants.iter().all(|v| matches!(v.style, ast::Style::Unit));
 
         if is_enum {
+            let comments = variants
+                .iter()
+                .map(|variant| crate::attrs::Attrs::from_variant(variant).to_comment_attrs())
+                .collect::<Vec<_>>();
             let v = &variants
                 .into_iter()
                 .map(|v| v.attrs.name().serialize_name()) // use serde name instead of v.ident
@@ -87,7 +92,7 @@ impl<'a> ParseContext {
             let k = v.iter().map(|v| ident_from_str(&v)).collect::<Vec<_>>();
 
             return QuoteMaker {
-                source: quote! ( { #(#k = #v),* } ),
+                source: quote! ( { #(#(#comments)* #k = #v),* } ),
                 enum_factory: Err("factory cannot be created with raw enum type"),
                 enum_handler: Err("handler cannot be created with raw enum type"),
                 kind: QuoteMakerKind::Enum,
@@ -288,7 +293,7 @@ impl<'a> ParseContext {
     /// Depends on TagInfo for layout
     fn derive_unit_variant(&self, taginfo: &TagInfo, variant: &Variant) -> VariantQuoteMaker {
         let variant_name = variant.attrs.name().serialize_name(); // use serde name instead of variant.ident
-
+        let comments = crate::attrs::Attrs::from_variant(variant).to_comment_attrs();
         if taginfo.tag.is_none() {
             return VariantQuoteMaker {
                 source: quote!(#variant_name),
@@ -298,7 +303,7 @@ impl<'a> ParseContext {
         let tag = ident_from_str(taginfo.tag.unwrap());
         VariantQuoteMaker {
             source: quote! (
-                { #tag: #variant_name }
+                { #(#comments)* #tag: #variant_name }
             ),
             inner_type: None,
         }
@@ -315,6 +320,7 @@ impl<'a> ParseContext {
         if field.attrs.skip_serializing() {
             return self.derive_unit_variant(taginfo, variant);
         };
+        let comments = crate::attrs::Attrs::from_variant(variant).to_comment_attrs();
         let ty = self.field_to_ts(field);
         let variant_name = self.variant_name(variant);
 
@@ -329,7 +335,7 @@ impl<'a> ParseContext {
 
             return VariantQuoteMaker {
                 source: quote! (
-                    { #tag : #ty }
+                    { #(#comments)* #tag : #ty }
 
                 ),
                 inner_type: Some(ty),
@@ -345,7 +351,7 @@ impl<'a> ParseContext {
 
         VariantQuoteMaker {
             source: quote! (
-                { #tag: #variant_name; #content: #ty }
+                { #(#comments)* #tag: #variant_name; #content: #ty }
             ),
             inner_type: Some(ty),
         }
@@ -365,9 +371,9 @@ impl<'a> ParseContext {
         if fields.is_empty() {
             return self.derive_unit_variant(taginfo, variant);
         }
-
         self.check_flatten(&fields, ast_container);
 
+        let comments = crate::attrs::Attrs::from_variant(variant).to_comment_attrs();
         let contents = self.derive_fields(&fields).collect::<Vec<_>>();
         let variant_name = self.variant_name(variant);
 
@@ -386,7 +392,7 @@ impl<'a> ParseContext {
             let tag = ident_from_str(&variant_name);
             return VariantQuoteMaker {
                 source: quote! (
-                    { #tag : #ty  }
+                    { #(#comments)* #tag : #ty  }
                 ),
                 inner_type: Some(ty),
             };
@@ -399,7 +405,7 @@ impl<'a> ParseContext {
 
             VariantQuoteMaker {
                 source: quote! (
-                    { #tag: #variant_name; #content: #ty }
+                    { #(#comments)* #tag: #variant_name; #content: #ty }
                 ),
                 inner_type: Some(ty),
             }
@@ -423,7 +429,7 @@ impl<'a> ParseContext {
             // spread together tagged no content
             VariantQuoteMaker {
                 source: quote! (
-                    { #tag: #variant_name; #ty_inner }
+                    { #(#comments)* #tag: #variant_name; #ty_inner }
                 ),
                 inner_type: Some(ty),
             }
@@ -444,6 +450,7 @@ impl<'a> ParseContext {
     ) -> VariantQuoteMaker {
         let variant_name = self.variant_name(variant);
         let fields = filter_visible(fields);
+        let comments = crate::attrs::Attrs::from_variant(variant).to_comment_attrs();
         let contents = self.derive_field_tuple(&fields);
         let ty = quote!([ #(#contents),* ]);
 
@@ -456,7 +463,7 @@ impl<'a> ParseContext {
             }
             let tag = ident_from_str(&variant_name);
             return VariantQuoteMaker {
-                source: quote! ({ #tag : #ty }),
+                source: quote! ({ #(#comments)* #tag : #ty }),
                 inner_type: Some(ty),
             };
         };
@@ -470,7 +477,7 @@ impl<'a> ParseContext {
 
         VariantQuoteMaker {
             source: quote! (
-            { #tag: #variant_name; #content : #ty }
+            { #(#comments)* #tag: #variant_name; #content : #ty }
             ),
             inner_type: Some(ty),
         }

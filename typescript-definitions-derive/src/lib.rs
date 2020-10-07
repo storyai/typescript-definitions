@@ -499,13 +499,11 @@ impl<'a> ParseContext {
 
     /// returns { #field_name: #ty }
     fn derive_field(&self, field: &ast::Field<'a>) -> QuoteT {
-
         let field_name = field.attrs.name().serialize_name(); // use serde name instead of field.member
-
+        let field_name = ident_from_str(&field_name);
         let ty = self.field_to_ts(&field);
-
-        let comment_str = Attrs::from_field(field, self.ctxt.as_ref()).to_comment_str();
-        str::parse(&format!("{}{}: {}", comment_str, field_name, ty)).unwrap()
+        let comment = Attrs::from_field(field, self.ctxt.as_ref()).to_comment_attrs();
+        quote!(#(#comment)* #field_name: #ty)
     }
 
     fn derive_fields(

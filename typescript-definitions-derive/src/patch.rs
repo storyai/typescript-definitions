@@ -123,7 +123,11 @@ pub fn patch(s: &str) -> Cow<'_, str> {
             "nlpatch" => "\n",
             "tsignore" => "//@ts-ignore\n",
             "pure" => "/*#__PURE__*/",
-            "doc" => return c.name("comment").map_or(Cow::Borrowed(""), |m| (String::from("/**") + &unescape(&m.as_str()) + "*/").into()),
+            "doc" => {
+                return c.name("comment").map_or(Cow::Borrowed(""), |m| {
+                    (String::from("/**") + &unescape(&m.as_str()) + "*/\n").into()
+                })
+            }
             _ => return Cow::Owned(c.get(0).unwrap().as_str().to_owned()), // maybe should just panic?
         };
         Cow::Borrowed(m)
@@ -136,12 +140,14 @@ lazy_static! {
 
 // when we get the string, e.g. newlines, backslashes and quotes are escaped
 fn unescape(input: &str) -> Cow<'_, str> {
-    UNESCAPE.replace_all(input, |c: &Captures| Cow::Borrowed(match c.get(1).map_or("", |m| dbg!(m.as_str())) {
-        "n" => "\n",
-        "\"" => "\"",
-        "\\" => "\\",
-        x => return Cow::Owned(x.into()),
-    }))
+    UNESCAPE.replace_all(input, |c: &Captures| {
+        Cow::Borrowed(match c.get(1).map_or("", |m| m.as_str()) {
+            "n" => "\n",
+            "\"" => "\"",
+            "\\" => "\\",
+            x => return Cow::Owned(x.into()),
+        })
+    })
 }
 
 #[inline]

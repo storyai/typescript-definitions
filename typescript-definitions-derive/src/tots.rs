@@ -5,9 +5,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use super::{
-    is_bytes, last_path_element, FieldContext, QuoteT, TSType,
-};
+use super::{is_bytes, last_path_element, FieldContext, QuoteT, TSType};
 use quote::quote;
 
 impl<'a> FieldContext<'a> {
@@ -110,8 +108,8 @@ impl<'a> FieldContext<'a> {
 
         use syn::Type::*;
         use syn::{
-            TypeArray, TypeBareFn, TypeGroup, TypeImplTrait, TypeParamBound,
-            TypeParen, TypePath, TypePtr, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
+            TypeArray, TypeBareFn, TypeGroup, TypeImplTrait, TypeParamBound, TypeParen, TypePath,
+            TypePtr, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
         };
         match ty {
             Slice(TypeSlice { elem, .. })
@@ -120,7 +118,8 @@ impl<'a> FieldContext<'a> {
             Reference(TypeReference { elem, .. }) => self.type_to_ts(elem),
             // fn(a: A,b: B, c:C) -> D
             BareFn(TypeBareFn { inputs, .. }) => {
-                self.ctxt.err_msg(inputs, "we do not support TypeScriptifying functions");
+                self.ctxt
+                    .err_msg(inputs, "we do not support TypeScriptifying functions");
                 quote!(any)
             }
             Never(..) => quote! { never },
