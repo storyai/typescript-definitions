@@ -1,0 +1,27 @@
+name: ci
+
+on: [push,pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Run proc macro tests
+      run: cargo test --verbose --manifest-path typescript-definitions-derive/Cargo.toml
+    - name: Run clippy
+      run: cargo clippy
+    - name: Run clippy on proc macro
+      run: cargo clippy --manifest-path typescript-definitions-derive/Cargo.toml
+
