@@ -185,7 +185,86 @@ mod macro_test {
             }
         );
         assert_conversion!(tokens, "/**\n * a well-documented struct\n */\n\
-            export type WellDocumented = { /**\n * even the field is documented\n */ well_documented: string }");
+            export type WellDocumented = { /**\n * even the field is documented\n */\n well_documented: string }");
+    }
+
+    #[test]
+    fn doc_c_like_enum_variant() {
+        let tokens = quote!(
+            enum CLikeEnum {
+                /// a well-documented variant
+                One,
+                /// another well-documented variant
+                /// this time with multiple lines
+                Other,
+            }
+        );
+        assert_conversion!(tokens, "export enum CLikeEnum { /**\n * a well-documented variant\n */\n One = \"One\" , /**\n * another well-documented variant\n * this time with multiple lines\n */\n Other = \"Other\" }");
+    }
+
+    #[test]
+    fn doc_unit_enum_variant() {
+        let tokens = quote!(
+            #[serde(tag = "t", content = "c")]
+            enum UnitEnum {
+                /// a well-documented variant
+                One(),
+                /// another well-documented variant
+                /// this time with multiple lines
+                Other(),
+            }
+        );
+        assert_conversion!(tokens, "export type UnitEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: [] } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [] }");
+    }
+
+    #[test]
+    fn doc_newtype_enum_variant() {
+        let tokens = quote!(
+            #[serde(tag = "t", content = "c")]
+            enum NewtypeEnum {
+                /// a well-documented variant
+                One(u32),
+                /// another well-documented variant
+                /// this time with multiple lines
+                Other(String),
+            }
+        );
+        assert_conversion!(tokens, "export type NewtypeEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: number } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: string }");
+    }
+
+    #[test]
+    fn doc_tuple_enum_variant() {
+        let tokens = quote!(
+            #[serde(tag = "t", content = "c")]
+            enum TupleEnum {
+                /// a well-documented variant
+                One(u32, String),
+                /// another well-documented variant
+                /// this time with multiple lines
+                Other(usize, usize),
+            }
+        );
+        assert_conversion!(tokens, "export type TupleEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: [number , string] } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [number , number] }" );
+    }
+
+    #[test]
+    fn doc_struct_enum_variant() {
+        let tokens = quote!(
+            #[serde(tag = "t", content = "c")]
+            enum StructEnum {
+                /// a well-documented variant
+                One {
+                    /// fields in variants
+                    x: f32,
+                    /// can be documented, too.
+                    y: f32,
+                },
+                /// another well-documented variant
+                /// this time with multiple lines
+                Other { name: String },
+            }
+        );
+        assert_conversion!(tokens, "export type StructEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: { /**\n * fields in variants\n */\n x: number; /**\n * can be documented, too.\n */\n y: number } } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: { name: string } }");
     }
 
     // Error tests

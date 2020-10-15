@@ -10,7 +10,17 @@ use super::{ast, ident_from_str, Ctxt};
 use quote::{quote, ToTokens};
 
 use proc_macro2::TokenStream;
+use syn::parse::{Parse, ParseStream};
 use syn::{Attribute, Ident, Lit, Meta, /* MetaList,*/ MetaNameValue, NestedMeta};
+
+// This is a helper to allow us to parse attributes
+struct AttrT(Vec<Attribute>);
+
+impl Parse for AttrT {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        Ok(AttrT(input.call(Attribute::parse_outer)?))
+    }
+}
 
 #[derive(Debug)]
 pub struct Attrs {
@@ -105,6 +115,11 @@ impl Attrs {
         } else {
             format!("/**\n{}\n */\n", self.comments.join("\n *\n"))
         }
+    }
+
+    pub fn to_comment_attrs(&self) -> Vec<syn::Attribute> {
+        let comment_str = self.to_comment_str();
+        syn::parse_str::<AttrT>(&comment_str).unwrap().0
     }
 
     fn err_msg<'a, A: ToTokens>(&self, tokens: A, msg: String, ctxt: Option<&'a Ctxt>) {
@@ -248,6 +263,13 @@ impl Attrs {
             }
         }
     }
+
+    pub fn from_variant(variant: &ast::Variant) -> Attrs {
+        let mut res = Self::new();
+        res.push_doc_comment(&variant.original.attrs);
+        res
+    }
+
     pub fn from_field(field: &ast::Field, ctxt: Option<&Ctxt>) -> Attrs {
         let mut res = Self::new();
         if let Some(ref ident) = field.original.ident {
