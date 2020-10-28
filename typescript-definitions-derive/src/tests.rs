@@ -184,8 +184,7 @@ mod macro_test {
                 well_documented: String,
             }
         );
-        assert_conversion!(tokens, "/**\n * a well-documented struct\n */\n\
-            export type WellDocumented = { /**\n * even the field is documented\n */\n well_documented: string }");
+        assert_conversion!(tokens, "/**\n * a well-documented struct\n */\nexport type WellDocumented = { \n    /**\n * even the field is documented\n */\n well_documented: string }");
     }
 
     #[test]
@@ -199,7 +198,7 @@ mod macro_test {
                 Other,
             }
         );
-        assert_conversion!(tokens, "export enum CLikeEnum { /**\n * a well-documented variant\n */\n One = \"One\" , /**\n * another well-documented variant\n * this time with multiple lines\n */\n Other = \"Other\" }");
+        assert_conversion!(tokens, "export enum CLikeEnum { \n    /**\n * a well-documented variant\n */\n One = \"One\" , \n    /**\n * another well-documented variant\n * this time with multiple lines\n */\n Other = \"Other\" }");
     }
 
     #[test]
@@ -214,7 +213,7 @@ mod macro_test {
                 Other(),
             }
         );
-        assert_conversion!(tokens, "export type UnitEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: [] } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [] }");
+        assert_conversion!(tokens, "export type UnitEnum = \n | { \n    /**\n * a well-documented variant\n */\n t: \"One\"; c: [] } \n | { \n    /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [] }");
     }
 
     #[test]
@@ -229,7 +228,7 @@ mod macro_test {
                 Other(String),
             }
         );
-        assert_conversion!(tokens, "export type NewtypeEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: number } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: string }");
+        assert_conversion!(tokens, "export type NewtypeEnum = \n | { \n    /**\n * a well-documented variant\n */\n t: \"One\"; c: number } \n | { \n    /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: string }");
     }
 
     #[test]
@@ -244,7 +243,7 @@ mod macro_test {
                 Other(usize, usize),
             }
         );
-        assert_conversion!(tokens, "export type TupleEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: [number , string] } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [number , number] }" );
+        assert_conversion!(tokens, "export type TupleEnum = \n | { \n    /**\n * a well-documented variant\n */\n t: \"One\"; c: [number , string] } \n | { \n    /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: [number , number] }" );
     }
 
     #[test]
@@ -264,7 +263,7 @@ mod macro_test {
                 Other { name: String },
             }
         );
-        assert_conversion!(tokens, "export type StructEnum = \n | { /**\n * a well-documented variant\n */\n t: \"One\"; c: { /**\n * fields in variants\n */\n x: number; /**\n * can be documented, too.\n */\n y: number } } \n | { /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: { name: string } }");
+        assert_conversion!(tokens, "export type StructEnum = \n | { \n    /**\n * a well-documented variant\n */\n t: \"One\"; c: { \n    /**\n * fields in variants\n */\n x: number; \n    /**\n * can be documented, too.\n */\n y: number } } \n | { \n    /**\n * another well-documented variant\n * this time with multiple lines\n */\n t: \"Other\"; c: { name: string } }");
     }
 
     // Error tests
