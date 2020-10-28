@@ -1,0 +1,7 @@
+[hooks]
+post-commit = "echo 'Thank you for your commit.'"
+pre-push = "cargo test && cargo test --manifest-path typescript-definitions-derive/Cargo.toml && cargo fmt -- --check && cargo fmt --manifest-path typescript-definitions-derive/Cargo.toml && cargo clippy && cargo clippy --manifest-path typescript-definitions-derive/Cargo.toml"
+post-push = "echo 'Thank you for pushing.'"
+
+[logging]
+verbose = true
