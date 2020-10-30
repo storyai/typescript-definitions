@@ -125,7 +125,7 @@ pub fn patch(s: &str) -> Cow<'_, str> {
             "pure" => "/*#__PURE__*/",
             "doc" => {
                 return c.name("comment").map_or(Cow::Borrowed(""), |m| {
-                    (String::from("/**") + &unescape(&m.as_str()) + "*/\n").into()
+                    (String::from("\n    /**") + &unescape(&m.as_str()) + "*/\n").into()
                 })
             }
             _ => return Cow::Owned(c.get(0).unwrap().as_str().to_owned()), // maybe should just panic?
