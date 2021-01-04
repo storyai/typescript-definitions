@@ -23,7 +23,7 @@ pub fn field_type_name(ty: &syn::Type) -> Option<String> {
     }
 }
 
-pub fn is_bytes<'a>(field: &ast::Field<'a>) -> bool {
+pub fn is_bytes(field: &ast::Field<'_>) -> bool {
     // check for #[serde(with="serde_bytes")]
     use syn::ExprPath;
     if let Some(ExprPath { ref path, .. }) = field.attrs.serialize_with() {

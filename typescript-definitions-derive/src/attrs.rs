@@ -122,7 +122,7 @@ impl Attrs {
         syn::parse_str::<AttrT>(&comment_str).unwrap().0
     }
 
-    fn err_msg<'a, A: ToTokens>(&self, tokens: A, msg: String, ctxt: Option<&'a Ctxt>) {
+    fn err_msg<A: ToTokens>(&self, tokens: A, msg: String, ctxt: Option<&'_ Ctxt>) {
         if let Some(ctxt) = ctxt {
             ctxt.error_spanned_by(tokens, msg);
         } else {
