@@ -88,10 +88,12 @@ fn do_derive_typescript_definition(input: QuoteT) -> QuoteT {
     let export_string = format!(
         // we're still going to include the values so we can separate them out in an additional step for webpack
         // the alternative to this seems like it might be to fork wasm-bindgen... which I don't want to do.
-        "{}\ntype __StartValuesFor__{}__ = `\n{}\n`/*EndValuesFor__{}__*/",
+        "/*StartDefinitionFor__{}__*/\n{}\ntype __StartValuesFor__{}__ = `\n{}\n`/*EndValuesFor__{}__*/\n/*EndDefinitionFor__{}__*/",
+        parsed.ident.as_str(),
         export_source.declarations,
         parsed.ident.as_str(),
         export_source.values.replace("`", "\\`"),
+        parsed.ident.as_str(),
         parsed.ident.as_str()
     );
     let name = tsy.ident.to_string().to_uppercase();
