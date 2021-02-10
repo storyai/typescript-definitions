@@ -150,7 +150,7 @@ impl<'a> FieldContext<'a> {
                 let tp = self.type_to_ts(elem);
                 quote! { ( #tp ) }
             }
-            Infer(..) | Macro(..) | Verbatim(..) | __Nonexhaustive => quote! { any },
+            Infer(..) | Macro(..) | Verbatim(..) | _ => quote! { any },
         }
     }
 
