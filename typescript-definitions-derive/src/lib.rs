@@ -464,7 +464,7 @@ impl<'a> ParseContext {
         if let Some(ref ctxt) = self.ctxt {
             ctxt.error_spanned_by(tokens, msg);
         } else {
-            panic!(msg.to_string())
+            panic!("{}", msg.to_string())
         }
     }
 
