@@ -5,7 +5,7 @@ src="https://raw.githubusercontent.com/arabidopsis/typescript-definitions/master
 
 # typescript-definitions
 
-## Storyscript changelog
+## Story.ai changelog
 
 ### April 2020
 
