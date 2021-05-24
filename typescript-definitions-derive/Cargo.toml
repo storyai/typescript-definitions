@@ -1,32 +1,30 @@
 [package]
-name = "typescript-definitions-derive"
-version = "0.1.10"
+authors = ["Tim Ryan <id@timryan.org>", "Sam Rijs <srijs@airpost.net>", "Ian Castleden <ian.castleden@gmail.com>"]
+categories = ["data-structures", "development-tools", "wasm", "web-programming"]
 description = "serde support for exporting Typescript definitions"
-authors = ["Tim Ryan <id@timryan.org>", "Sam Rijs <srijs@airpost.net>" , "Ian Castleden <ian.castleden@gmail.com>"]
-license = "MIT/Apache-2.0"
-repository = "https://github.com/arabidopsis/typescript-definitions"
-keywords =["typescript", "serde"]
-categories = ["data-structures", "development-tools", "wasm" , "web-programming"]
 edition = "2018"
-
+keywords = ["typescript", "serde"]
+license = "MIT/Apache-2.0"
+name = "typescript-definitions-derive"
+repository = "https://github.com/arabidopsis/typescript-definitions"
+version = "0.1.10"
 
 [lib]
-proc-macro = true
 path = "src/lib.rs"
-
+proc-macro = true
 
 [dependencies]
-quote = "1.0.6"
-serde_derive_internals = "0.25.0"
-syn = { version = "1.0.23", features = ["extra-traits"] }
-proc-macro2 = "1.0.17"
-regex = "1.3.7"
-lazy_static = "1.4.0"
-cfg-if = "0.1.10"
+cfg-if = "1.0"
+lazy_static = "1.4"
+proc-macro2 = "1.0"
+quote = "1.0"
+regex = "1"
+serde_derive_internals = "0.26"
+syn = {version = "1.0", features = ["extra-traits"]}
 
 [dev-dependencies]
-serde = { version = "1.0.87", features = ["derive"] }
-insta = "0.6.2"
+insta = "1.7"
+serde = {version = "1.0", features = ["derive"]}
 
 [features]
 export-typescript = []
